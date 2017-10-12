@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.0/Chart.js"></script>
+    <link rel="import" href="./bower_components/polymer/polymer.html">
+    <link rel="import" href="./bower_components/iron-icons/iron-icons.html">
+    <link rel="import" href="./bower_components/paper-listbox/paper-listbox.html">
+    <link rel="import" href="./bower_components/paper-item/paper-item.html">
+    <link rel="import" href="./bower_components/paper-icon-button/paper-icon-button.html">
+    <link rel="import" href="./bower_components/app-layout/app-layout.html">
+    <title>Document</title>
+    <custom-style>
+        <style>
+            body { margin:0px}
+            meter { width:96vw };
+            app-toolbar {
+                /* Toolbar is the main header, so give it some color */
+                background-color: #1E88E5;
+                font-family: 'Roboto', Helvetica, sans-serif;
+                color: white;
+                --app-toolbar-font-size: 24px;
+            }
+            .content { padding:10px;}
+        </style>
+    </custom-style>
+</head>
+<body>
+    <app-drawer-layout>
+        <app-drawer swipe-open="true" slot="drawer">
+                <app-toolbar>
+                        <div main-title>Settings</div>
+                </app-toolbar>
+                <paper-listbox>
+                        <paper-item>Sources</paper-item>
+                    </paper-listbox>
+        </app-drawer>
+        <app-header-layout>
+            <app-header fixed condenses effects="waterfall" slot="header">
+                <app-toolbar>
+                <paper-icon-button drawer-toggle icon="menu"></paper-icon-button>
+                <div main-title>Crowd detection crossing</div>
+                </app-toolbar>
+            </app-header>
+            <div class="content">
+                    <p>Historical data</p>
+                    <canvas id="myChart" height="200"></canvas>
+                    <meter id="meter" value="2" min="0" max="60" low="25" high="40" optimum="0"></meter>
+            </div>
+        </app-header-layout>
+    </app-drawer-layout>
+           
+    <script>
+        Chart.defaults.global.tooltipenabled = false;
+        var ctx = document.getElementById("myChart").getContext('2d');
+        var myChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                    labels: [""],
+                    datasets: [{
+                        label: "Crowd business in percentage", backgroundColor: 'rgba(255,0,0,0.1)', borderColor: 'red', data: [], fill: true }]
+                    },
+            options: {
+                events:[],
+                scales: {
+                    xAxes: [{
+                                display: true, scaleLabel: {  display: true, labelString: 'Time' }
+                            }],
+                    yAxes: [{
+                            display: true,
+                            scaleLabel: { display: true, labelString: 'Busy'  },
+                            ticks: { beginAtZero: true, steps: 10, stepValue: 5, max: 100 } }]
+                    },}
+        });
+        
+        var socket = io();
+        socket.on('data', function(msg){
+            myChart.data.labels.push(new Date().toLocaleTimeString());
+            myChart.data.datasets[0].data.push(msg);
+            myChart.update();
+            document.querySelector("#meter").value = msg;
+        });
+    </script>
+</body>
+</html>
